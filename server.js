@@ -18,7 +18,7 @@ const PORT =
     process.env.PORT || 3000;
 
 const WB_TOKEN =
-    process.env.WB_TOKEN;
+  'eyJhbGciOiJFUzI1NiIsImtpZCI6IjIwMjYwMzAydjEiLCJ0eXAiOiJKV1QifQ.eyJhY2MiOjMsImVudCI6MSwiZXhwIjoxNzk1ODE3NTIwLCJmb3IiOiJzZWxmIiwiaWQiOiIwMTllNzMzOC0yOTMyLTcyZTQtOWJiMy0wNTQ0OTA3OTdiOTEiLCJpaWQiOjExNzcyNzc0LCJvaWQiOjEyOTk2MSwicyI6ODE2NjIsInNpZCI6IjljYmM3N2U3LWNjMzEtNDgwMC1hMzk2LWYxZmViZjM2MjEyZSIsInQiOmZhbHNlLCJ1aWQiOjExNzcyNzc0fQ.FSug6W66Kdm_ej_1o8lpkDYhSjbTDM2GceayIDb-nocwDXVllJWkb0d89TAXp6_Gz-FyYh4-puiDuAJfpZE6yA';
 
 
 // ============================================================
