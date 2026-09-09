@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>WB Profit Report</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            background: #f5f5f7;
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            color: #111;
+        }
+
+        .box {
+            width: 420px;
+            max-width: calc(100% - 30px);
+
+            padding: 32px;
+
+            background: #fff;
+
+            border-radius: 18px;
+
+            box-shadow:
+                0 12px 40px rgba(0, 0, 0, .08);
+        }
+
+        h1 {
+            margin: 0 0 8px;
+
+            font-size: 25px;
+        }
+
+        .description {
+            margin-bottom: 28px;
+
+            color: #777;
+
+            font-size: 14px;
+        }
+
+        .field {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+
+            margin-bottom: 7px;
+
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            height: 46px;
+
+            padding: 0 12px;
+
+            border: 1px solid #ddd;
+
+            border-radius: 9px;
+
+            font-size: 16px;
+
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #777;
+        }
+
+        button {
+            width: 100%;
+            height: 48px;
+
+            margin-top: 4px;
+
+            border: 0;
+
+            border-radius: 9px;
+
+            background: #111;
+            color: #fff;
+
+            font-size: 16px;
+            font-weight: 600;
+
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: .9;
+        }
+
+        button:disabled {
+            opacity: .5;
+            cursor: wait;
+        }
+
+        #status {
+            min-height: 22px;
+
+            margin-top: 18px;
+
+            text-align: center;
+
+            font-size: 14px;
+        }
+
+        .loading {
+            color: #777;
+        }
+
+        .success {
+            color: #188038;
+        }
+
+        .error {
+            color: #d93025;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="box">
+
+    <h1>Отчёт Wildberries</h1>
+
+    <div class="description">
+        Выберите период и сформируйте Excel
+    </div>
+
+    <div class="field">
+
+        <label for="dateFrom">
+            Дата от
+        </label>
+
+        <input
+            type="date"
+            id="dateFrom"
+        >
+
+    </div>
+
+    <div class="field">
+
+        <label for="dateTo">
+            Дата до
+        </label>
+
+        <input
+            type="date"
+            id="dateTo"
+        >
+
+    </div>
+
+    <button
+        id="generate"
+        type="button"
+    >
+        Сформировать Excel
+    </button>
+
+    <div id="status"></div>
+
+</div>
+
+
+<script>
+
+const dateFrom =
+    document.getElementById('dateFrom');
+
+const dateTo =
+    document.getElementById('dateTo');
+
+const button =
+    document.getElementById('generate');
+
+const status =
+    document.getElementById('status');
+
+
+// ============================================================
+// ФОРМАТ ДАТЫ
+// ============================================================
+
+function formatDate(date) {
+
+    const year =
+        date.getFullYear();
+
+    const month =
+        String(
+            date.getMonth() + 1
+        ).padStart(2, '0');
+
+    const day =
+        String(
+            date.getDate()
+        ).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+}
+
+
+// ============================================================
+// ДАТЫ ПО УМОЛЧАНИЮ
+// ============================================================
+
+function setDefaultDates() {
+
+    const today =
+        new Date();
+
+    const day =
+        today.getDay();
+
+    const diff =
+        day === 0
+            ? -6
+            : 1 - day;
+
+    const monday =
+        new Date(today);
+
+    monday.setDate(
+        today.getDate() + diff
+    );
+
+    const sunday =
+        new Date(monday);
+
+    sunday.setDate(
+        monday.getDate() + 6
+    );
+
+    dateFrom.value =
+        formatDate(monday);
+
+    dateTo.value =
+        formatDate(sunday);
+}
+
+
+// ============================================================
+// СТАТУС
+// ============================================================
+
+function setStatus(
+    text,
+    type = ''
+) {
+
+    status.textContent =
+        text;
+
+    status.className =
+        type;
+}
+
+
+// ============================================================
+// СКАЧИВАНИЕ
+// ============================================================
+
+async function generateReport() {
+
+    const from =
+        dateFrom.value;
+
+    const to =
+        dateTo.value;
+
+
+    if (!from || !to) {
+
+        setStatus(
+            'Выберите обе даты',
+            'error'
+        );
+
+        return;
+    }
+
+
+    if (from > to) {
+
+        setStatus(
+            'Дата от не может быть позже даты до',
+            'error'
+        );
+
+        return;
+    }
+
+
+    button.disabled = true;
+
+
+    try {
+
+        setStatus(
+            'Получаем данные Wildberries...',
+            'loading'
+        );
+
+
+        const response =
+            await fetch(
+                '/api/wb-profit-report',
+                {
+                    method: 'POST',
+
+                    headers: {
+                        'Content-Type':
+                            'application/json'
+                    },
+
+                    body: JSON.stringify({
+                        dateFrom: from,
+                        dateTo: to
+                    })
+                }
+            );
+
+
+        if (!response.ok) {
+
+            let message =
+                'Ошибка формирования отчёта';
+
+            try {
+
+                const data =
+                    await response.json();
+
+                if (data.error) {
+                    message = data.error;
+                }
+
+            } catch (_) {}
+
+            throw new Error(message);
+        }
+
+
+        setStatus(
+            'Excel готовится...',
+            'loading'
+        );
+
+
+        const blob =
+            await response.blob();
+
+
+        const url =
+            URL.createObjectURL(blob);
+
+
+        const link =
+            document.createElement('a');
+
+        link.href =
+            url;
+
+        link.download =
+            `profit-report-${from}-${to}.xlsx`;
+
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        link.remove();
+
+
+        URL.revokeObjectURL(url);
+
+
+        setStatus(
+            'Excel успешно скачан',
+            'success'
+        );
+
+    } catch (error) {
+
+        console.error(error);
+
+        setStatus(
+            error.message ||
+            'Ошибка',
+            'error'
+        );
+
+    } finally {
+
+        button.disabled = false;
+    }
+}
+
+
+button.addEventListener(
+    'click',
+    generateReport
+);
+
+
+setDefaultDates();
+
+</script>
+
+</body>
+</html>
